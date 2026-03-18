@@ -3,6 +3,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import LandingPage from "./pages/LandingPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
+import Support from "./pages/Support";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
 import ParentalGate from "./pages/ParentalGate";
@@ -25,7 +29,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Splash />} />
+          {/* Public landing & legal pages */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfUse />} />
+          <Route path="/support" element={<Support />} />
+          {/* App pages */}
+          <Route path="/app" element={<Splash />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/gate" element={<ParentalGate />} />
           <Route path="/home" element={<Home />} />
