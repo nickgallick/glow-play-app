@@ -110,7 +110,7 @@
   }
 
   .gradient-landing {
-    background: linear-gradient(135deg, hsl(var(--landing-pink)), hsl(var(--landing-lavender)), hsl(var(--landing-mint)));
+    background: linear-gradient(135deg, #FF8FAB, #C4B5FD, #6EE7B7);
   }
 
   .glass {
