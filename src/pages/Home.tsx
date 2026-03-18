@@ -1,82 +1,81 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Palette, Crown, Star, Lock, Sparkles } from "lucide-react";
-import { SquishButton, SparkleEffect } from "@/components/SparkleEffect";
-import appIcon from "@/assets/app-icon.png";
+import { Camera, Palette, Heart, Settings, Sparkles } from "lucide-react";
 
 const menuItems = [
-  { icon: Palette, label: "Themes", color: "bg-secondary", path: "/themes" },
-  { icon: Crown, label: "Closet", color: "bg-warning", path: "/closet" },
-  { icon: Star, label: "Faves", color: "bg-accent", path: "/favorites" },
-  { icon: Lock, label: "Parents", color: "bg-muted", path: "/gate", state: { destination: "/parents" } },
+  { icon: Palette, label: "Routines", path: "/themes" },
+  { icon: Camera, label: "Closet", path: "/closet" },
+  { icon: Heart, label: "Favorites", path: "/favorites" },
+  { icon: Settings, label: "Settings", path: "/gate", state: { destination: "/parents" } },
 ];
 
 const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-background confetti-bg relative">
-      <SparkleEffect count={6} />
+    <div className="flex flex-col min-h-screen bg-background relative">
+      {/* Subtle gradient bg */}
+      <div className="absolute top-0 left-0 right-0 h-[60vh] gradient-subtle opacity-60" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-4">
-        <img src={appIcon} alt="GlowUp Kids" className="w-12 h-12 rounded-2xl" />
-        <div className="flex items-center gap-1 bg-warning/30 px-4 py-2 rounded-full">
-          <Crown className="w-5 h-5 text-warning-foreground" strokeWidth={3} />
-          <span className="text-sm font-bold text-warning-foreground font-kid">FREE</span>
+      <div className="relative flex items-center justify-between px-6 pt-14 pb-4">
+        <div>
+          <h1 className="text-2xl font-display font-semibold text-foreground">GlowUp</h1>
         </div>
+        <button
+          onClick={() => navigate("/gate", { state: { destination: "/subscription" } })}
+          className="flex items-center gap-1.5 bg-foreground/5 px-3 py-1.5 rounded-full"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-accent" />
+          <span className="text-xs font-medium text-foreground">PRO</span>
+        </button>
       </div>
 
       {/* Camera Preview */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8">
+      <div className="relative flex-1 flex flex-col items-center justify-center px-8">
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          className="relative"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative w-full max-w-[280px] aspect-[3/4] rounded-3xl overflow-hidden bg-muted shadow-elevated"
         >
-          <div className="w-64 h-64 rounded-full overflow-hidden shadow-soft border-4 border-card gradient-pink-lavender flex items-center justify-center">
-            <div className="text-6xl">📸</div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Camera className="w-12 h-12 text-muted-foreground/30" />
           </div>
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute -top-2 -right-2 w-12 h-12 bg-warning rounded-full flex items-center justify-center shadow-soft"
-          >
-            <span className="text-xl">✨</span>
-          </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/5 to-transparent" />
         </motion.div>
 
-        <SquishButton
-          size="xl"
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/camera")}
-          className="bg-primary text-primary-foreground px-16 py-6 mt-10 text-2xl font-bold font-kid gap-3"
+          className="mt-8 bg-foreground text-background px-12 py-4 rounded-2xl text-base font-medium flex items-center gap-2"
         >
-          <Sparkles className="w-7 h-7" strokeWidth={3} />
-          START
-        </SquishButton>
+          <Sparkles className="w-4 h-4" />
+          Start GRWM
+        </motion.button>
       </div>
 
       {/* Bottom Menu */}
-      <div className="px-6 pb-10">
-        <div className="flex justify-between gap-4">
+      <div className="relative px-6 pb-10 pt-4">
+        <div className="flex justify-between">
           {menuItems.map((item, i) => (
-            <motion.div
+            <motion.button
               key={item.label}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: i * 0.1, type: "spring", stiffness: 300, damping: 20 }}
-              className="flex flex-col items-center gap-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(item.path, { state: item.state })}
+              className="flex flex-col items-center gap-1.5 py-2 px-4"
             >
-              <SquishButton
-                size="lg"
-                onClick={() => navigate(item.path, { state: item.state })}
-                className={`${item.color}`}
-              >
-                <item.icon className="w-8 h-8 text-foreground" strokeWidth={3} />
-              </SquishButton>
-              <span className="text-xs font-bold text-muted-foreground font-kid">{item.label}</span>
-            </motion.div>
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                <item.icon className="w-5 h-5 text-foreground/70" strokeWidth={1.8} />
+              </div>
+              <span className="text-[11px] text-muted-foreground font-medium">{item.label}</span>
+            </motion.button>
           ))}
         </div>
       </div>

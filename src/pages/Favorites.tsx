@@ -1,44 +1,46 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
-import { SquishButton } from "@/components/SparkleEffect";
-import emptyFavorites from "@/assets/empty-favorites.png";
+import { ArrowLeft, Heart } from "lucide-react";
 
 const Favorites = () => {
   const navigate = useNavigate();
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <div className="flex items-center justify-between px-6 pt-12 pb-4">
-        <SquishButton size="md" onClick={() => navigate("/home")} className="bg-muted">
-          <X className="w-7 h-7 text-foreground" strokeWidth={3} />
-        </SquishButton>
-        <h1 className="text-2xl font-bold font-kid">⭐ Favorites</h1>
-        <div className="w-16" />
+      <div className="flex items-center gap-4 px-6 pt-14 pb-4">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate("/home")}
+          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
+        >
+          <ArrowLeft className="w-5 h-5 text-foreground" strokeWidth={1.8} />
+        </motion.button>
+        <h1 className="text-xl font-display font-semibold text-foreground">Favorites</h1>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-8">
-        <motion.img
-          src={emptyFavorites}
-          alt="No favorites"
-          className="w-40 h-40 mb-6"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        />
-        <p className="text-xl font-bold text-foreground font-kid text-center mb-2">
-          No favorites yet!
-        </p>
-        <p className="text-muted-foreground font-kid text-center">
-          ⭐ your favorite items!
-        </p>
-        <SquishButton
-          size="lg"
-          onClick={() => navigate("/camera")}
-          className="bg-primary text-primary-foreground px-8 py-4 mt-8 font-bold font-kid"
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
         >
-          ✨ Explore Items!
-        </SquishButton>
+          <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
+            <Heart className="w-8 h-8 text-muted-foreground/40" strokeWidth={1.5} />
+          </div>
+          <p className="text-lg font-display font-semibold text-foreground mb-2">
+            No favorites yet
+          </p>
+          <p className="text-sm text-muted-foreground mb-8">
+            Heart products you love to save them here
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/camera")}
+            className="bg-foreground text-background px-8 py-3 rounded-2xl text-sm font-medium"
+          >
+            Explore products
+          </motion.button>
+        </motion.div>
       </div>
     </div>
   );
