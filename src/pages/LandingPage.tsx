@@ -469,7 +469,7 @@ const LandingPage = () => {
                   <p className="text-[10px] text-white/50 font-medium">0:32 / 1:00</p>
                   <div className="w-24 h-1.5 bg-white/20 rounded-full overflow-hidden">
                     <motion.div
-                      className="h-full bg-red-400/80 rounded-full"
+                      className="h-full bg-destructive/60 rounded-full"
                       animate={{ width: ["0%", "53%"] }}
                       transition={{ duration: 3, repeat: Infinity }}
                     />
