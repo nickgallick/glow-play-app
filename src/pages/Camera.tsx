@@ -1,17 +1,25 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, Undo2, Trash2 } from "lucide-react";
+import { X, RotateCcw, Undo2, Trash2, Loader2 } from "lucide-react";
 import { categories, beautyItems } from "@/data/makeupItems";
 import { useCamera } from "@/hooks/useCamera";
+import { useFaceLandmarks } from "@/hooks/useFaceLandmarks";
+import { useVideoRecorder } from "@/hooks/useVideoRecorder";
+import { drawProductOnFace } from "@/lib/faceDrawing";
 
 const Camera = () => {
   const navigate = useNavigate();
   const { videoRef, hasPermission, flipCamera } = useCamera();
+  const { detect, ready: faceReady, loading: faceLoading } = useFaceLandmarks();
+  const { startRecording, stopRecording, recording, videoUrl, elapsed } = useVideoRecorder();
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animFrameRef = useRef<number>(0);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [appliedItems, setAppliedItems] = useState<string[]>([]);
   const [trayOpen, setTrayOpen] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [intensity, setIntensity] = useState(70);
 
   const filteredItems = beautyItems.filter((item) => item.category === selectedCategory);
@@ -27,56 +35,113 @@ const Camera = () => {
     setTrayOpen(true);
   };
 
+  // Main render loop: draw video + product overlays on canvas
+  const renderLoop = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < 2) {
+      animFrameRef.current = requestAnimationFrame(renderLoop);
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Match canvas to video dimensions
+    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+    }
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Draw mirrored video frame
+    ctx.save();
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.restore();
+
+    // Detect face and draw products
+    if (faceReady && appliedItems.length > 0) {
+      const timestamp = performance.now();
+      const results = detect(video, timestamp);
+
+      if (results && results.faceLandmarks && results.faceLandmarks.length > 0) {
+        const landmarks = results.faceLandmarks[0];
+
+        // Mirror the landmarks since we're drawing mirrored
+        const mirroredLandmarks = landmarks.map((lm) => ({
+          ...lm,
+          x: 1 - lm.x,
+        }));
+
+        for (const itemId of appliedItems) {
+          const item = beautyItems.find((b) => b.id === itemId);
+          if (item) {
+            drawProductOnFace(ctx, mirroredLandmarks, item, intensity, w, h);
+          }
+        }
+      }
+    }
+
+    animFrameRef.current = requestAnimationFrame(renderLoop);
+  }, [faceReady, appliedItems, intensity, detect, videoRef]);
+
+  useEffect(() => {
+    animFrameRef.current = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [renderLoop]);
+
+  // Navigate to review when recording stops and video is ready
+  useEffect(() => {
+    if (videoUrl) {
+      navigate("/review", { state: { videoUrl } });
+    }
+  }, [videoUrl, navigate]);
+
+  const handleRecord = () => {
+    if (recording) {
+      stopRecording();
+    } else {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        startRecording(canvas);
+      }
+    }
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
   return (
     <div className="flex flex-col min-h-screen bg-foreground relative overflow-hidden">
-      {/* Live camera feed */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
+      {/* Hidden video element for camera feed */}
+      <video ref={videoRef} autoPlay playsInline muted className="hidden" />
+
+      {/* Canvas showing video + AR overlays */}
+      <canvas
+        ref={canvasRef}
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ transform: "scaleX(-1)" }}
       />
 
-      {/* Fallback if no camera */}
+      {/* Camera permission fallback */}
       {hasPermission === false && (
-        <div className="absolute inset-0 bg-foreground/90 flex items-center justify-center">
+        <div className="absolute inset-0 bg-foreground flex items-center justify-center z-20">
           <div className="text-center text-primary-foreground/60 px-8">
             <p className="text-lg font-medium mb-2">Camera access needed</p>
-            <p className="text-sm opacity-60">Allow camera access to try on products</p>
+            <p className="text-sm opacity-60">Allow camera to try on products</p>
           </div>
         </div>
       )}
 
-      {/* Applied items overlay */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <AnimatePresence>
-          {appliedItems.map((id) => {
-            const item = beautyItems.find((m) => m.id === id);
-            if (!item) return null;
-            return (
-              <motion.div
-                key={id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: intensity / 100, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="absolute"
-                style={{
-                  left: `${30 + Math.random() * 40}%`,
-                  top: `${20 + Math.random() * 30}%`,
-                }}
-              >
-                <div
-                  className="w-10 h-10 rounded-full shadow-lg"
-                  style={{ backgroundColor: item.color + "80" }}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+      {/* Face model loading indicator */}
+      {faceLoading && hasPermission !== false && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 glass-dark px-4 py-3 rounded-2xl flex items-center gap-2">
+          <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+          <span className="text-primary-foreground text-sm">Loading AR...</span>
+        </div>
+      )}
 
       {/* Top controls */}
       <div className="relative z-10 flex items-center justify-between px-4 pt-14">
@@ -88,15 +153,17 @@ const Camera = () => {
           <X className="w-5 h-5 text-primary-foreground" strokeWidth={2} />
         </motion.button>
 
-        {isRecording && (
-          <motion.div
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ repeat: Infinity, duration: 1 }}
-            className="flex items-center gap-2 glass-dark px-4 py-2 rounded-full"
-          >
-            <div className="w-2 h-2 rounded-full bg-destructive" />
-            <span className="text-primary-foreground text-xs font-medium">REC</span>
-          </motion.div>
+        {recording && (
+          <div className="flex items-center gap-2 glass-dark px-4 py-2 rounded-full">
+            <motion.div
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ repeat: Infinity, duration: 1 }}
+              className="w-2 h-2 rounded-full bg-destructive"
+            />
+            <span className="text-primary-foreground text-xs font-medium font-body">
+              {formatTime(elapsed)}
+            </span>
+          </div>
         )}
 
         <div className="flex gap-2">
@@ -112,9 +179,18 @@ const Camera = () => {
         </div>
       </div>
 
+      {/* Applied items indicator */}
+      {appliedItems.length > 0 && !recording && (
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-10 glass-dark px-3 py-1.5 rounded-full">
+          <span className="text-primary-foreground text-xs">
+            {appliedItems.length} product{appliedItems.length > 1 ? "s" : ""} applied
+          </span>
+        </div>
+      )}
+
       {/* Intensity slider */}
       <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-        <div className="relative w-8 h-40 bg-primary-foreground/10 backdrop-blur-md rounded-full overflow-hidden">
+        <div className="relative w-8 h-36 glass-dark rounded-full overflow-hidden">
           <div
             className="absolute bottom-0 w-full bg-primary/50 rounded-full transition-all"
             style={{ height: `${intensity}%` }}
@@ -138,18 +214,27 @@ const Camera = () => {
         <div className="flex justify-center mb-4">
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (!isRecording) navigate("/review");
-            }}
+            onClick={handleRecord}
             className="relative"
           >
-            <div className="w-[72px] h-[72px] rounded-full border-[3px] border-primary-foreground/60 flex items-center justify-center">
-              <motion.div
-                className="w-[56px] h-[56px] rounded-full bg-primary"
-                animate={isRecording ? { scale: [1, 0.85, 1] } : {}}
-                transition={{ repeat: Infinity, duration: 1 }}
-              />
+            <div className={`w-[72px] h-[72px] rounded-full border-[3px] flex items-center justify-center transition-colors ${
+              recording ? "border-destructive" : "border-primary-foreground/60"
+            }`}>
+              {recording ? (
+                <motion.div
+                  className="w-7 h-7 rounded-md bg-destructive"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                />
+              ) : (
+                <div className="w-[56px] h-[56px] rounded-full bg-destructive" />
+              )}
             </div>
+            {!recording && (
+              <p className="text-primary-foreground/50 text-[10px] text-center mt-1">
+                Tap to record
+              </p>
+            )}
           </motion.button>
         </div>
 
@@ -201,9 +286,11 @@ const Camera = () => {
                   >
                     <div
                       className={`w-full aspect-square rounded-2xl flex items-center justify-center relative transition-all ${
-                        appliedItems.includes(item.id) ? "ring-2 ring-primary ring-offset-2" : ""
+                        appliedItems.includes(item.id)
+                          ? "ring-2 ring-primary ring-offset-2"
+                          : ""
                       }`}
-                      style={{ backgroundColor: item.color + "20" }}
+                      style={{ backgroundColor: item.color + "25" }}
                     >
                       <span className="text-2xl">{item.image}</span>
                       {item.premium && (
@@ -213,7 +300,9 @@ const Camera = () => {
                       )}
                     </div>
                     <div className="text-center">
-                      <p className="text-[11px] font-medium text-foreground leading-tight">{item.name}</p>
+                      <p className="text-[11px] font-medium text-foreground leading-tight">
+                        {item.name}
+                      </p>
                       <p className="text-[9px] text-muted-foreground">{item.brand}</p>
                     </div>
                   </motion.button>
