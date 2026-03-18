@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/logo-transparent.png";
 
 const TermsOfUse = () => {
   const navigate = useNavigate();
