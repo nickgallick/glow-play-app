@@ -1,7 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { RotateCcw, Heart, Download, Share2 } from "lucide-react";
+import { RotateCcw, Heart, Share2 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
+import { toast } from "sonner";
 
 const Review = () => {
   const navigate = useNavigate();
@@ -17,27 +18,32 @@ const Review = () => {
     try {
       const response = await fetch(videoUrl);
       const blob = await response.blob();
-      const file = new File([blob], `glowup-${Date.now()}.mp4`, { type: "video/mp4" });
+      // Try mp4 first for iOS Camera Roll compatibility
+      const isMP4 = blob.type.includes("mp4");
+      const ext = isMP4 ? "mp4" : "webm";
+      const file = new File([blob], `glowup-${Date.now()}.${ext}`, { type: blob.type });
 
-      // Use Web Share API (saves to camera roll on iPhone)
+      // Use Web Share API → iOS share sheet → "Save Video" option
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: "GlowUp Video",
         });
         setSaved(true);
+        toast("✅ Video shared!");
         return;
       }
     } catch {
-      // Fallback if share is cancelled or fails
+      // User cancelled share sheet - that's ok
     }
 
     // Fallback: direct download
     const a = document.createElement("a");
     a.href = videoUrl;
-    a.download = `glowup-${Date.now()}.webm`;
+    a.download = `glowup-${Date.now()}.mp4`;
     a.click();
     setSaved(true);
+    toast("✅ Video saved!");
   }, [videoUrl]);
 
   return (
@@ -96,7 +102,7 @@ const Review = () => {
             ) : (
               <>
                 <Share2 className="w-5 h-5" strokeWidth={1.8} />
-                Save Video
+                Save to Camera Roll
               </>
             )}
           </motion.button>
