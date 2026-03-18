@@ -7,6 +7,7 @@ import {
   X, Menu
 } from "lucide-react";
 import { useState } from "react";
+import logo from "@/assets/logo-transparent.png";
 
 const trustBadges = [
   { icon: EyeOff, label: "No Ads" },
