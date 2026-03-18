@@ -460,7 +460,7 @@ const LandingPage = () => {
               <PhoneMockup>
                 <div className="flex flex-col items-center gap-3">
                   <motion.div
-                    className="w-12 h-12 rounded-full bg-red-500/80 flex items-center justify-center"
+                    className="w-12 h-12 rounded-full bg-destructive/80 flex items-center justify-center"
                     animate={{ scale: [1, 1.15, 1] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                   >
