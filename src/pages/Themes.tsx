@@ -7,7 +7,7 @@ const Themes = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-4 px-6 pt-14 pb-6">
         <motion.button
@@ -17,7 +17,13 @@ const Themes = () => {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" strokeWidth={1.8} />
         </motion.button>
-        <h1 className="text-xl font-display font-semibold text-foreground">Routines</h1>
+        <motion.h1 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-xl font-display font-semibold text-foreground"
+        >
+          Routines
+        </motion.h1>
       </div>
 
       {/* Pro banner */}
@@ -25,15 +31,27 @@ const Themes = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
         onClick={() => navigate("/gate", { state: { destination: "/subscription" } })}
         className="mx-6 mb-6 p-4 bg-foreground rounded-2xl flex items-center gap-3"
       >
-        <Sparkles className="w-5 h-5 text-accent" strokeWidth={1.8} />
+        <motion.div
+          animate={{ rotate: [0, 15, -15, 0] }}
+          transition={{ repeat: Infinity, duration: 3 }}
+        >
+          <Sparkles className="w-5 h-5 text-accent" strokeWidth={1.8} />
+        </motion.div>
         <div className="flex-1 text-left">
           <p className="text-primary-foreground text-sm font-medium">Unlock all routines</p>
           <p className="text-primary-foreground/50 text-xs">Access 500+ products & looks</p>
         </div>
-        <span className="text-primary-foreground/40 text-xs">→</span>
+        <motion.span 
+          className="text-primary-foreground/40 text-xs"
+          animate={{ x: [0, 4, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+        >
+          →
+        </motion.span>
       </motion.button>
 
       {/* Grid */}
@@ -42,15 +60,22 @@ const Themes = () => {
           {routinePacks.map((pack, i) => (
             <motion.button
               key={pack.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
               onClick={() => navigate("/camera")}
-              className="relative rounded-2xl overflow-hidden aspect-[3/4] flex flex-col items-center justify-center"
+              className="relative rounded-2xl overflow-hidden aspect-[3/4] flex flex-col items-center justify-center shadow-soft"
               style={{ backgroundColor: pack.color }}
             >
-              <span className="text-4xl mb-2">{pack.emoji}</span>
+              <motion.span 
+                className="text-4xl mb-2"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 3, delay: i * 0.3 }}
+              >
+                {pack.emoji}
+              </motion.span>
               <span className="text-sm font-medium text-foreground/80">{pack.name}</span>
 
               {pack.free ? (

@@ -13,7 +13,7 @@ const sections = [
     title: "Preferences",
     items: [
       { icon: CameraIcon, label: "Default Camera", subtitle: "Front", action: null },
-      { icon: Video, label: "Max Recording", subtitle: "15 seconds", action: null },
+      { icon: Video, label: "Max Recording", subtitle: "60 seconds", action: null },
     ],
   },
   {
@@ -40,19 +40,32 @@ const Parents = () => {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" strokeWidth={1.8} />
         </motion.button>
-        <h1 className="text-xl font-display font-semibold text-foreground">Settings</h1>
+        <motion.h1
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-xl font-display font-semibold text-foreground"
+        >
+          Settings
+        </motion.h1>
       </div>
 
       <div className="flex-1 px-6 pb-8 overflow-y-auto">
-        {sections.map((section) => (
-          <div key={section.title} className="mb-6">
+        {sections.map((section, si) => (
+          <motion.div
+            key={section.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: si * 0.1 }}
+            className="mb-6"
+          >
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
               {section.title}
             </p>
             <div className="bg-card rounded-2xl overflow-hidden shadow-soft">
               {section.items.map((item, i) => (
-                <button
+                <motion.button
                   key={i}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => item.action === "subscription" ? navigate("/gate", { state: { destination: "/subscription" } }) : undefined}
                   className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors border-b border-border last:border-b-0"
                 >
@@ -64,10 +77,10 @@ const Parents = () => {
                     )}
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

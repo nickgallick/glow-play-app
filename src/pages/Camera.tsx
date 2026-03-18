@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, Undo2, Trash2, Loader2 } from "lucide-react";
+import { X, RotateCcw, Undo2, Trash2, Loader2, Check } from "lucide-react";
 import { categories, beautyItems } from "@/data/makeupItems";
 import { useCamera } from "@/hooks/useCamera";
 import { useFaceLandmarks } from "@/hooks/useFaceLandmarks";
@@ -10,7 +10,7 @@ import { drawProductOnFace } from "@/lib/faceDrawing";
 
 const Camera = () => {
   const navigate = useNavigate();
-  const { videoRef, hasPermission, flipCamera } = useCamera();
+  const { videoRef, hasPermission, flipCamera, stream } = useCamera();
   const { detect, ready: faceReady, loading: faceLoading } = useFaceLandmarks();
   const { startRecording, stopRecording, recording, videoUrl, elapsed } = useVideoRecorder();
 
@@ -35,7 +35,11 @@ const Camera = () => {
     setTrayOpen(true);
   };
 
-  // Main render loop: draw video + product overlays on canvas
+  const handleConfirmSelection = () => {
+    setTrayOpen(false);
+  };
+
+  // Main render loop
   const renderLoop = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -47,7 +51,6 @@ const Camera = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Match canvas to video dimensions
     if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
@@ -56,22 +59,18 @@ const Camera = () => {
     const w = canvas.width;
     const h = canvas.height;
 
-    // Draw mirrored video frame
     ctx.save();
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
     ctx.restore();
 
-    // Detect face and draw products
     if (faceReady && appliedItems.length > 0) {
       const timestamp = performance.now();
       const results = detect(video, timestamp);
 
       if (results && results.faceLandmarks && results.faceLandmarks.length > 0) {
         const landmarks = results.faceLandmarks[0];
-
-        // Mirror the landmarks since we're drawing mirrored
         const mirroredLandmarks = landmarks.map((lm) => ({
           ...lm,
           x: 1 - lm.x,
@@ -94,7 +93,6 @@ const Camera = () => {
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [renderLoop]);
 
-  // Navigate to review when recording stops and video is ready
   useEffect(() => {
     if (videoUrl) {
       navigate("/review", { state: { videoUrl } });
@@ -107,7 +105,9 @@ const Camera = () => {
     } else {
       const canvas = canvasRef.current;
       if (canvas) {
-        startRecording(canvas);
+        // Pass audio stream from camera for sound recording
+        const audioStream = stream && stream.getAudioTracks().length > 0 ? stream : undefined;
+        startRecording(canvas, audioStream || undefined);
       }
     }
   };
@@ -116,16 +116,13 @@ const Camera = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-foreground relative overflow-hidden">
-      {/* Hidden video element for camera feed */}
       <video ref={videoRef} autoPlay playsInline muted className="hidden" />
 
-      {/* Canvas showing video + AR overlays */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Camera permission fallback */}
       {hasPermission === false && (
         <div className="absolute inset-0 bg-foreground flex items-center justify-center z-20">
           <div className="text-center text-primary-foreground/60 px-8">
@@ -135,7 +132,6 @@ const Camera = () => {
         </div>
       )}
 
-      {/* Face model loading indicator */}
       {faceLoading && hasPermission !== false && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 glass-dark px-4 py-3 rounded-2xl flex items-center gap-2">
           <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
@@ -259,7 +255,7 @@ const Camera = () => {
           </div>
         </div>
 
-        {/* Item tray */}
+        {/* Item tray with confirm button */}
         <AnimatePresence>
           {trayOpen && selectedCategory && (
             <motion.div
@@ -269,11 +265,19 @@ const Camera = () => {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="bg-card rounded-t-3xl px-4 pt-2 pb-8 max-h-[40vh] overflow-y-auto"
             >
-              <div className="flex justify-center mb-3">
+              <div className="flex items-center justify-between mb-3">
                 <button
                   onClick={() => setTrayOpen(false)}
                   className="w-10 h-1 bg-border rounded-full"
                 />
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleConfirmSelection}
+                  className="flex items-center gap-1.5 bg-foreground text-background px-4 py-2 rounded-full text-xs font-medium"
+                >
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  Confirm
+                </motion.button>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -293,7 +297,16 @@ const Camera = () => {
                       style={{ backgroundColor: item.color + "25" }}
                     >
                       <span className="text-2xl">{item.image}</span>
-                      {item.premium && (
+                      {appliedItems.includes(item.id) && (
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center"
+                        >
+                          <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />
+                        </motion.div>
+                      )}
+                      {item.premium && !appliedItems.includes(item.id) && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full flex items-center justify-center">
                           <span className="text-[10px] text-accent-foreground">✦</span>
                         </div>

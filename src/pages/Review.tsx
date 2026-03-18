@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Save, RotateCcw, Heart, Download } from "lucide-react";
-import { useState, useRef } from "react";
+import { RotateCcw, Heart, Download, Share2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
 
 const Review = () => {
   const navigate = useNavigate();
@@ -11,14 +11,34 @@ const Review = () => {
   const [favorited, setFavorited] = useState(false);
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
 
-  const handleSave = () => {
+  const handleSave = useCallback(async () => {
     if (!videoUrl) return;
+
+    try {
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `glowup-${Date.now()}.mp4`, { type: "video/mp4" });
+
+      // Use Web Share API (saves to camera roll on iPhone)
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "GlowUp Video",
+        });
+        setSaved(true);
+        return;
+      }
+    } catch {
+      // Fallback if share is cancelled or fails
+    }
+
+    // Fallback: direct download
     const a = document.createElement("a");
     a.href = videoUrl;
     a.download = `glowup-${Date.now()}.webm`;
     a.click();
     setSaved(true);
-  };
+  }, [videoUrl]);
 
   return (
     <div className="flex flex-col min-h-screen bg-foreground">
@@ -54,7 +74,6 @@ const Review = () => {
         )}
       </div>
 
-      {/* Bottom buttons */}
       {videoUrl && (
         <div className="flex justify-center items-center gap-6 px-8 pb-12">
           <motion.button
@@ -76,7 +95,7 @@ const Review = () => {
               </motion.span>
             ) : (
               <>
-                <Download className="w-5 h-5" strokeWidth={1.8} />
+                <Share2 className="w-5 h-5" strokeWidth={1.8} />
                 Save Video
               </>
             )}

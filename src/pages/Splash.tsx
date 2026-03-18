@@ -12,24 +12,41 @@ const Splash = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background relative overflow-hidden">
-      {/* Subtle gradient orbs */}
-      <div className="absolute top-1/4 -left-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
-      <div className="absolute bottom-1/4 -right-20 w-64 h-64 rounded-full bg-accent/10 blur-3xl" />
+      {/* Animated gradient orbs */}
+      <motion.div 
+        className="absolute top-1/4 -left-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl"
+        animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.2, 1] }}
+        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+      />
+      <motion.div 
+        className="absolute bottom-1/4 -right-20 w-64 h-64 rounded-full bg-accent/10 blur-3xl"
+        animate={{ x: [0, -30, 0], y: [0, 20, 0], scale: [1.2, 1, 1.2] }}
+        transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+      />
+      <motion.div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/5 blur-3xl"
+        animate={{ scale: [0.8, 1.3, 0.8], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+      />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="text-center"
+        initial={{ opacity: 0, y: 30, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        className="text-center relative z-10"
       >
-        <h1 className="text-5xl font-display font-semibold text-foreground tracking-tight">
+        <motion.h1 
+          className="text-6xl font-display font-semibold text-foreground tracking-tight"
+          animate={{ letterSpacing: ["-0.02em", "0.02em", "-0.02em"] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+        >
           GlowUp
-        </h1>
+        </motion.h1>
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="text-muted-foreground text-lg mt-2 font-light tracking-wide"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="text-muted-foreground text-lg mt-3 font-light tracking-widest uppercase"
         >
           get ready with me
         </motion.p>
@@ -41,12 +58,15 @@ const Splash = () => {
         transition={{ delay: 1.2, duration: 0.6 }}
         className="absolute bottom-16"
       >
-        <div className="w-8 h-8 rounded-full border-2 border-primary/30 flex items-center justify-center">
-          <motion.div
-            className="w-2 h-2 rounded-full bg-primary/60"
-            animate={{ scale: [1, 1.4, 1] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-          />
+        <div className="flex gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-2 h-2 rounded-full bg-primary/40"
+              animate={{ scale: [1, 1.5, 1], opacity: [0.4, 1, 0.4] }}
+              transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
+            />
+          ))}
         </div>
       </motion.div>
     </div>
