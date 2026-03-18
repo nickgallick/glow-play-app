@@ -13,7 +13,7 @@ export const useCamera = () => {
       }
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
+        audio: true,
       });
       setStream(mediaStream);
       setHasPermission(true);
@@ -21,7 +21,20 @@ export const useCamera = () => {
         videoRef.current.srcObject = mediaStream;
       }
     } catch {
-      setHasPermission(false);
+      // Try without audio if audio fails
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        setStream(mediaStream);
+        setHasPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      } catch {
+        setHasPermission(false);
+      }
     }
   }, [facingMode]);
 
