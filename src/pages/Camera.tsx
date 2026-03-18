@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, type PointerEvent as ReactPointerEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Undo2, Trash2, Loader2, Check, Camera as CameraIcon } from "lucide-react";
@@ -9,11 +9,19 @@ import { useVideoRecorder } from "@/hooks/useVideoRecorder";
 import { drawProductOnFace } from "@/lib/faceDrawing";
 import { toast } from "sonner";
 
+type SkincarePoint = {
+  x: number;
+  y: number;
+  size: number;
+};
+
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
 const Camera = () => {
   const navigate = useNavigate();
   const { videoRef, hasPermission, flipCamera, stream } = useCamera();
   const { detect, ready: faceReady, loading: faceLoading } = useFaceLandmarks();
-  const { startRecording, stopRecording, recording, videoUrl, elapsed } = useVideoRecorder();
+  const { startRecording, stopRecording, recording, videoUrl, videoMimeType, elapsed } = useVideoRecorder();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number>(0);
@@ -23,9 +31,28 @@ const Camera = () => {
   const [trayOpen, setTrayOpen] = useState(false);
   const [intensity, setIntensity] = useState(70);
   const [isDragging, setIsDragging] = useState(false);
+  const [skincarePoints, setSkincarePoints] = useState<SkincarePoint[]>([]);
+  const [isPaintingSkincare, setIsPaintingSkincare] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const filteredItems = beautyItems.filter((item) => item.category === selectedCategory);
+
+  const appliedProducts = useMemo(
+    () =>
+      appliedItems
+        .map((id) => beautyItems.find((item) => item.id === id))
+        .filter((item): item is (typeof beautyItems)[number] => Boolean(item)),
+    [appliedItems]
+  );
+
+  const hasSkincareApplied = useMemo(
+    () => appliedProducts.some((item) => item.category === "skincare"),
+    [appliedProducts]
+  );
+
+  useEffect(() => {
+    if (!hasSkincareApplied) setSkincarePoints([]);
+  }, [hasSkincareApplied]);
 
   const toggleItem = (id: string) => {
     setAppliedItems((prev) =>
@@ -42,15 +69,21 @@ const Camera = () => {
     setTrayOpen(false);
   };
 
-  // Photo capture during recording
   const capturePhoto = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     canvas.toBlob((blob) => {
       if (!blob) return;
+
       const file = new File([blob], `glowup-photo-${Date.now()}.png`, { type: "image/png" });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        navigator.share({ files: [file], title: "GlowUp Photo" });
+      const canShareFiles =
+        typeof navigator.canShare === "function"
+          ? navigator.canShare({ files: [file] })
+          : true;
+
+      if (typeof navigator.share === "function" && canShareFiles) {
+        void navigator.share({ files: [file], title: "GlowUp Photo" });
       } else {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -59,39 +92,110 @@ const Camera = () => {
         a.click();
         URL.revokeObjectURL(url);
       }
+
       toast("📸 Photo captured!");
     }, "image/png");
   }, []);
 
-  // Slider drag handling
   const handleSliderInteraction = useCallback((clientY: number) => {
     const slider = sliderRef.current;
     if (!slider) return;
+
     const rect = slider.getBoundingClientRect();
     const relativeY = clientY - rect.top;
     const percentage = Math.round(Math.max(10, Math.min(100, 100 - (relativeY / rect.height) * 100)));
     setIntensity(percentage);
   }, []);
 
-  const handleSliderPointerDown = useCallback((e: React.PointerEvent) => {
-    setIsDragging(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    handleSliderInteraction(e.clientY);
-  }, [handleSliderInteraction]);
+  const handleSliderPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      setIsDragging(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+      handleSliderInteraction(e.clientY);
+    },
+    [handleSliderInteraction]
+  );
 
-  const handleSliderPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging) return;
-    handleSliderInteraction(e.clientY);
-  }, [isDragging, handleSliderInteraction]);
+  const handleSliderPointerMove = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (!isDragging) return;
+      handleSliderInteraction(e.clientY);
+    },
+    [isDragging, handleSliderInteraction]
+  );
 
   const handleSliderPointerUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
-  // Main render loop
+  const getCanvasNormalizedPoint = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+
+    const sourceWidth = canvas.width || rect.width;
+    const sourceHeight = canvas.height || rect.height;
+    const sourceAspect = sourceWidth / sourceHeight;
+    const viewAspect = rect.width / rect.height;
+
+    if (sourceAspect > viewAspect) {
+      const renderedWidth = rect.height * sourceAspect;
+      const offsetX = (renderedWidth - rect.width) / 2;
+      const x = clamp01((clientX - rect.left + offsetX) / renderedWidth);
+      const y = clamp01((clientY - rect.top) / rect.height);
+      return { x, y };
+    }
+
+    const renderedHeight = rect.width / sourceAspect;
+    const offsetY = (renderedHeight - rect.height) / 2;
+    const x = clamp01((clientX - rect.left) / rect.width);
+    const y = clamp01((clientY - rect.top + offsetY) / renderedHeight);
+    return { x, y };
+  }, []);
+
+  const addSkincarePoint = useCallback(
+    (clientX: number, clientY: number, pressure = 0.5) => {
+      const point = getCanvasNormalizedPoint(clientX, clientY);
+      if (!point) return;
+
+      const normalizedPressure = Math.min(1, Math.max(0.15, pressure));
+      const size = 0.022 + normalizedPressure * 0.022;
+
+      setSkincarePoints((prev) => [...prev.slice(-140), { ...point, size }]);
+    },
+    [getCanvasNormalizedPoint]
+  );
+
+  const handleCanvasPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLCanvasElement>) => {
+      if (!hasSkincareApplied) return;
+      e.preventDefault();
+      setIsPaintingSkincare(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+      addSkincarePoint(e.clientX, e.clientY, e.pressure || 0.5);
+    },
+    [hasSkincareApplied, addSkincarePoint]
+  );
+
+  const handleCanvasPointerMove = useCallback(
+    (e: ReactPointerEvent<HTMLCanvasElement>) => {
+      if (!hasSkincareApplied || !isPaintingSkincare) return;
+      e.preventDefault();
+      addSkincarePoint(e.clientX, e.clientY, e.pressure || 0.5);
+    },
+    [hasSkincareApplied, isPaintingSkincare, addSkincarePoint]
+  );
+
+  const handleCanvasPointerUp = useCallback(() => {
+    setIsPaintingSkincare(false);
+  }, []);
+
   const renderLoop = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
+
     if (!video || !canvas || video.readyState < 2) {
       animFrameRef.current = requestAnimationFrame(renderLoop);
       return;
@@ -114,28 +218,32 @@ const Camera = () => {
     ctx.drawImage(video, 0, 0, w, h);
     ctx.restore();
 
-    if (faceReady && appliedItems.length > 0) {
+    if (faceReady && appliedProducts.length > 0) {
       const timestamp = performance.now();
       const results = detect(video, timestamp);
 
-      if (results && results.faceLandmarks && results.faceLandmarks.length > 0) {
-        const landmarks = results.faceLandmarks[0];
-        const mirroredLandmarks = landmarks.map((lm) => ({
-          ...lm,
-          x: 1 - lm.x,
+      if (results?.faceLandmarks?.length) {
+        const mirroredLandmarks = results.faceLandmarks[0].map((landmark) => ({
+          ...landmark,
+          x: 1 - landmark.x,
         }));
 
-        for (const itemId of appliedItems) {
-          const item = beautyItems.find((b) => b.id === itemId);
-          if (item) {
-            drawProductOnFace(ctx, mirroredLandmarks, item, intensity, w, h);
-          }
+        for (const item of appliedProducts) {
+          drawProductOnFace(
+            ctx,
+            mirroredLandmarks,
+            item,
+            intensity,
+            w,
+            h,
+            item.category === "skincare" ? { skincarePoints } : undefined
+          );
         }
       }
     }
 
     animFrameRef.current = requestAnimationFrame(renderLoop);
-  }, [faceReady, appliedItems, intensity, detect, videoRef]);
+  }, [faceReady, appliedProducts, intensity, detect, videoRef, skincarePoints]);
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(renderLoop);
@@ -144,23 +252,25 @@ const Camera = () => {
 
   useEffect(() => {
     if (videoUrl) {
-      navigate("/review", { state: { videoUrl } });
+      navigate("/review", { state: { videoUrl, videoMimeType } });
     }
-  }, [videoUrl, navigate]);
+  }, [videoUrl, videoMimeType, navigate]);
 
   const handleRecord = () => {
     if (recording) {
       stopRecording();
-    } else {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const audioStream = stream && stream.getAudioTracks().length > 0 ? stream : undefined;
-        startRecording(canvas, audioStream || undefined);
-      }
+      return;
     }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const audioStream = stream && stream.getAudioTracks().length > 0 ? stream : undefined;
+    startRecording(canvas, audioStream || undefined);
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const formatTime = (seconds: number) =>
+    `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
     <div className="flex flex-col min-h-screen bg-foreground relative overflow-hidden">
@@ -169,6 +279,10 @@ const Camera = () => {
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full object-cover"
+        onPointerDown={handleCanvasPointerDown}
+        onPointerMove={handleCanvasPointerMove}
+        onPointerUp={handleCanvasPointerUp}
+        onPointerCancel={handleCanvasPointerUp}
       />
 
       {hasPermission === false && (
@@ -187,7 +301,12 @@ const Camera = () => {
         </div>
       )}
 
-      {/* Top controls */}
+      {hasSkincareApplied && !trayOpen && (
+        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-10 glass-dark px-3 py-1.5 rounded-full">
+          <span className="text-primary-foreground text-xs">Tap & drag on face to apply cream</span>
+        </div>
+      )}
+
       <div className="relative z-10 flex items-center justify-between px-4 pt-14">
         <motion.button
           whileTap={{ scale: 0.95 }}
@@ -211,19 +330,33 @@ const Camera = () => {
         )}
 
         <div className="flex gap-2">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={flipCamera} className="glass-dark w-10 h-10 rounded-full flex items-center justify-center">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={flipCamera}
+            className="glass-dark w-10 h-10 rounded-full flex items-center justify-center"
+          >
             <RotateCcw className="w-4 h-4 text-primary-foreground" strokeWidth={2} />
           </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setAppliedItems(prev => prev.slice(0, -1))} className="glass-dark w-10 h-10 rounded-full flex items-center justify-center">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setAppliedItems((prev) => prev.slice(0, -1))}
+            className="glass-dark w-10 h-10 rounded-full flex items-center justify-center"
+          >
             <Undo2 className="w-4 h-4 text-primary-foreground" strokeWidth={2} />
           </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setAppliedItems([])} className="glass-dark w-10 h-10 rounded-full flex items-center justify-center">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setAppliedItems([]);
+              setSkincarePoints([]);
+            }}
+            className="glass-dark w-10 h-10 rounded-full flex items-center justify-center"
+          >
             <Trash2 className="w-4 h-4 text-primary-foreground" strokeWidth={2} />
           </motion.button>
         </div>
       </div>
 
-      {/* Applied items indicator */}
       {appliedItems.length > 0 && !recording && (
         <div className="absolute top-28 left-1/2 -translate-x-1/2 z-10 glass-dark px-3 py-1.5 rounded-full">
           <span className="text-primary-foreground text-xs">
@@ -232,7 +365,6 @@ const Camera = () => {
         </div>
       )}
 
-      {/* Dynamic intensity slider */}
       <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
         <div
           ref={sliderRef}
@@ -242,19 +374,16 @@ const Camera = () => {
           onPointerUp={handleSliderPointerUp}
           onPointerCancel={handleSliderPointerUp}
         >
-          {/* Fill */}
           <motion.div
             className="absolute bottom-0 w-full bg-primary/60 rounded-full"
             animate={{ height: `${intensity}%` }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
-          {/* Thumb indicator */}
           <motion.div
             className="absolute left-1/2 -translate-x-1/2 w-8 h-1.5 bg-primary-foreground rounded-full shadow-lg"
             animate={{ bottom: `calc(${intensity}% - 3px)` }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
-          {/* Percentage label */}
           <motion.div
             className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
             animate={{ bottom: `calc(${intensity}% + 8px)` }}
@@ -266,15 +395,12 @@ const Camera = () => {
           </motion.div>
         </div>
         <p className="text-primary-foreground/40 text-[9px] text-center mt-1.5 font-medium">
-          Intensity
+          Brightness
         </p>
       </div>
 
-      {/* Bottom area */}
       <div className="relative z-10 mt-auto">
-        {/* Record + photo buttons */}
         <div className="flex justify-center items-center gap-6 mb-4">
-          {/* Photo capture button (visible while recording) */}
           {recording && (
             <motion.button
               initial={{ scale: 0 }}
@@ -287,15 +413,12 @@ const Camera = () => {
             </motion.button>
           )}
 
-          {/* Record button */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handleRecord}
-            className="relative"
-          >
-            <div className={`w-[72px] h-[72px] rounded-full border-[3px] flex items-center justify-center transition-colors ${
-              recording ? "border-destructive" : "border-primary-foreground/60"
-            }`}>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleRecord} className="relative">
+            <div
+              className={`w-[72px] h-[72px] rounded-full border-[3px] flex items-center justify-center transition-colors ${
+                recording ? "border-destructive" : "border-primary-foreground/60"
+              }`}
+            >
               {recording ? (
                 <motion.div
                   className="w-7 h-7 rounded-md bg-destructive"
@@ -307,17 +430,13 @@ const Camera = () => {
               )}
             </div>
             {!recording && (
-              <p className="text-primary-foreground/50 text-[10px] text-center mt-1">
-                Tap to record
-              </p>
+              <p className="text-primary-foreground/50 text-[10px] text-center mt-1">Tap to record</p>
             )}
           </motion.button>
 
-          {/* Spacer for symmetry when recording */}
           {recording && <div className="w-12" />}
         </div>
 
-        {/* Category toolbar */}
         <div className="glass rounded-t-3xl px-2 pt-3 pb-2">
           <div className="flex overflow-x-auto gap-1 px-1 pb-1 scrollbar-hide">
             {categories.map((cat) => (
@@ -338,7 +457,6 @@ const Camera = () => {
           </div>
         </div>
 
-        {/* Item tray with confirm button */}
         <AnimatePresence>
           {trayOpen && selectedCategory && (
             <motion.div
@@ -349,10 +467,7 @@ const Camera = () => {
               className="bg-card rounded-t-3xl px-4 pt-2 pb-8 max-h-[40vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-3">
-                <button
-                  onClick={() => setTrayOpen(false)}
-                  className="w-10 h-1 bg-border rounded-full"
-                />
+                <button onClick={() => setTrayOpen(false)} className="w-10 h-1 bg-border rounded-full" />
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handleConfirmSelection}
@@ -373,9 +488,7 @@ const Camera = () => {
                   >
                     <div
                       className={`w-full aspect-square rounded-2xl flex items-center justify-center relative transition-all ${
-                        appliedItems.includes(item.id)
-                          ? "ring-2 ring-primary ring-offset-2"
-                          : ""
+                        appliedItems.includes(item.id) ? "ring-2 ring-primary ring-offset-2" : ""
                       }`}
                       style={{ backgroundColor: item.color + "25" }}
                     >
@@ -396,9 +509,7 @@ const Camera = () => {
                       )}
                     </div>
                     <div className="text-center">
-                      <p className="text-[11px] font-medium text-foreground leading-tight">
-                        {item.name}
-                      </p>
+                      <p className="text-[11px] font-medium text-foreground leading-tight">{item.name}</p>
                       <p className="text-[9px] text-muted-foreground">{item.brand}</p>
                     </div>
                   </motion.button>
