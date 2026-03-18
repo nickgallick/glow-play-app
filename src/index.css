@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -50,9 +50,20 @@
 
     --font-display: 'Playfair Display', Georgia, serif;
     --font-body: 'Outfit', system-ui, sans-serif;
+    --font-landing: 'Inter', system-ui, sans-serif;
 
     --shadow-soft: 0 2px 12px rgba(0,0,0,0.06);
     --shadow-elevated: 0 8px 30px rgba(0,0,0,0.08);
+
+    /* Landing page tokens */
+    --landing-bg: 29 100% 96%;
+    --landing-text: 217 33% 17%;
+    --landing-light: 210 20% 98%;
+    --landing-pink: 344 100% 78%;
+    --landing-lavender: 258 95% 79%;
+    --landing-mint: 160 63% 67%;
+    --landing-yellow: 48 96% 77%;
+    --landing-dark: 217 33% 17%;
   }
 }
 
@@ -78,6 +89,10 @@
     font-family: var(--font-body);
   }
 
+  .font-landing {
+    font-family: var(--font-landing);
+  }
+
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
@@ -92,6 +107,10 @@
 
   .gradient-subtle {
     background: linear-gradient(180deg, hsl(350 60% 96%), hsl(30 30% 96%));
+  }
+
+  .gradient-landing {
+    background: linear-gradient(135deg, hsl(var(--landing-pink)), hsl(var(--landing-lavender)), hsl(var(--landing-mint)));
   }
 
   .glass {
