@@ -4,10 +4,18 @@ import { RotateCcw, Heart, Share2 } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
+const isIOSDevice = () => {
+  const ua = navigator.userAgent;
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+};
+
 const Review = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const videoUrl = (location.state as { videoUrl?: string })?.videoUrl;
+  const state = (location.state as { videoUrl?: string; videoMimeType?: string } | null) ?? null;
+  const videoUrl = state?.videoUrl;
+  const videoMimeType = state?.videoMimeType;
+
   const [saved, setSaved] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const videoPlayerRef = useRef<HTMLVideoElement>(null);
@@ -18,33 +26,48 @@ const Review = () => {
     try {
       const response = await fetch(videoUrl);
       const blob = await response.blob();
-      // Try mp4 first for iOS Camera Roll compatibility
-      const isMP4 = blob.type.includes("mp4");
-      const ext = isMP4 ? "mp4" : "webm";
-      const file = new File([blob], `glowup-${Date.now()}.${ext}`, { type: blob.type });
 
-      // Use Web Share API → iOS share sheet → "Save Video" option
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      const preferredType = (videoMimeType || blob.type || "video/mp4").includes("mp4")
+        ? "video/mp4"
+        : blob.type || "video/webm";
+
+      const ext = preferredType.includes("mp4") ? "mp4" : "webm";
+      const normalizedBlob = blob.type === preferredType ? blob : new Blob([blob], { type: preferredType });
+      const file = new File([normalizedBlob], `glowup-${Date.now()}.${ext}`, { type: preferredType });
+
+      const canShareFiles =
+        typeof navigator.canShare === "function"
+          ? navigator.canShare({ files: [file] })
+          : true;
+
+      if (typeof navigator.share === "function" && canShareFiles) {
         await navigator.share({
           files: [file],
           title: "GlowUp Video",
         });
+
         setSaved(true);
-        toast("✅ Video shared!");
+        toast(isIOSDevice() ? "Share sheet opened — tap ‘Save Video’." : "Video shared.");
+        return;
+      }
+
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: "GlowUp Video" });
+        setSaved(true);
+        toast("Share sheet opened.");
         return;
       }
     } catch {
-      // User cancelled share sheet - that's ok
+      // User cancelled or share not available
     }
 
-    // Fallback: direct download
     const a = document.createElement("a");
     a.href = videoUrl;
     a.download = `glowup-${Date.now()}.mp4`;
     a.click();
     setSaved(true);
-    toast("✅ Video saved!");
-  }, [videoUrl]);
+    toast(isIOSDevice() ? "If needed, open file and tap Share → Save Video." : "Video downloaded.");
+  }, [videoUrl, videoMimeType]);
 
   return (
     <div className="flex flex-col min-h-screen bg-foreground">
