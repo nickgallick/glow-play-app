@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { X, Lock, Crown } from "lucide-react";
-import { SquishButton } from "@/components/SparkleEffect";
-import { themePacks } from "@/data/makeupItems";
+import { ArrowLeft, Lock, Sparkles } from "lucide-react";
+import { routinePacks } from "@/data/makeupItems";
 
 const Themes = () => {
   const navigate = useNavigate();
@@ -10,60 +9,57 @@ const Themes = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-4">
-        <SquishButton size="md" onClick={() => navigate("/home")} className="bg-muted">
-          <X className="w-7 h-7 text-foreground" strokeWidth={3} />
-        </SquishButton>
-        <h1 className="text-2xl font-bold font-kid">🎨 Themes</h1>
-        <div className="w-16" />
+      <div className="flex items-center gap-4 px-6 pt-14 pb-6">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate("/home")}
+          className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
+        >
+          <ArrowLeft className="w-5 h-5 text-foreground" strokeWidth={1.8} />
+        </motion.button>
+        <h1 className="text-xl font-display font-semibold text-foreground">Routines</h1>
       </div>
 
-      {/* Premium banner */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="mx-6 mb-6 p-4 gradient-splash rounded-3xl flex items-center gap-3"
+      {/* Pro banner */}
+      <motion.button
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate("/gate", { state: { destination: "/subscription" } })}
+        className="mx-6 mb-6 p-4 bg-foreground rounded-2xl flex items-center gap-3"
       >
-        <Crown className="w-8 h-8 text-primary-foreground" strokeWidth={3} />
-        <div className="flex-1">
-          <p className="text-primary-foreground font-bold font-kid">Get All Packs!</p>
-          <p className="text-primary-foreground/80 text-sm font-kid">Unlock 500+ items ✨</p>
+        <Sparkles className="w-5 h-5 text-accent" strokeWidth={1.8} />
+        <div className="flex-1 text-left">
+          <p className="text-primary-foreground text-sm font-medium">Unlock all routines</p>
+          <p className="text-primary-foreground/50 text-xs">Access 500+ products & looks</p>
         </div>
-        <SquishButton
-          size="sm"
-          onClick={() => navigate("/gate", { state: { destination: "/subscription" } })}
-          className="bg-primary-foreground/20 px-4 py-2"
-        >
-          <span className="text-primary-foreground font-bold text-sm font-kid">⭐</span>
-        </SquishButton>
-      </motion.div>
+        <span className="text-primary-foreground/40 text-xs">→</span>
+      </motion.button>
 
-      {/* Theme grid */}
+      {/* Grid */}
       <div className="flex-1 px-6 pb-8 overflow-y-auto">
-        <div className="grid grid-cols-2 gap-4">
-          {themePacks.map((pack, i) => (
+        <div className="grid grid-cols-2 gap-3">
+          {routinePacks.map((pack, i) => (
             <motion.button
               key={pack.id}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: i * 0.05, type: "spring", stiffness: 300, damping: 20 }}
-              whileTap={{ scale: 0.92, rotate: -1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => navigate("/camera")}
-              className="relative rounded-3xl overflow-hidden aspect-[3/4] shadow-soft"
-              style={{ backgroundColor: pack.color + "30" }}
+              className="relative rounded-2xl overflow-hidden aspect-[3/4] flex flex-col items-center justify-center"
+              style={{ backgroundColor: pack.color }}
             >
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-6xl mb-2">{pack.emoji}</span>
-                <span className="text-lg font-bold font-kid text-foreground">{pack.name}</span>
-              </div>
+              <span className="text-4xl mb-2">{pack.emoji}</span>
+              <span className="text-sm font-medium text-foreground/80">{pack.name}</span>
 
               {pack.free ? (
-                <div className="absolute top-3 right-3 bg-accent px-3 py-1 rounded-full">
-                  <span className="text-xs font-bold text-accent-foreground font-kid">FREE</span>
+                <div className="absolute top-2.5 right-2.5 bg-card/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-semibold text-foreground">FREE</span>
                 </div>
               ) : (
-                <div className="absolute top-3 right-3 bg-warning/80 w-8 h-8 rounded-full flex items-center justify-center">
-                  <Lock className="w-4 h-4 text-warning-foreground" strokeWidth={3} />
+                <div className="absolute top-2.5 right-2.5 bg-card/60 backdrop-blur-sm w-7 h-7 rounded-full flex items-center justify-center">
+                  <Lock className="w-3 h-3 text-foreground/60" strokeWidth={2} />
                 </div>
               )}
             </motion.button>

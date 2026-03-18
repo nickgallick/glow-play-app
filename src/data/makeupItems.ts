@@ -1,76 +1,85 @@
-export interface MakeupItem {
+export interface BeautyItem {
   id: string;
   name: string;
+  brand: string;
   category: string;
   color: string;
-  icon: string;
+  image: string;
   premium: boolean;
 }
 
 export const categories = [
-  { id: "lips", icon: "💄", label: "Lips" },
+  { id: "lips", icon: "💋", label: "Lips" },
   { id: "eyes", icon: "👁️", label: "Eyes" },
-  { id: "blush", icon: "✨", label: "Blush" },
-  { id: "nails", icon: "💅", label: "Nails" },
-  { id: "accessories", icon: "🎀", label: "Accessories" },
-  { id: "facepaint", icon: "🌈", label: "Face Paint" },
-  { id: "looks", icon: "🎭", label: "Full Looks" },
-  { id: "stickers", icon: "⭐", label: "Stickers" },
+  { id: "face", icon: "✨", label: "Face" },
+  { id: "skincare", icon: "🧴", label: "Skincare" },
+  { id: "blush", icon: "🌸", label: "Blush" },
+  { id: "brows", icon: "✏️", label: "Brows" },
+  { id: "accessories", icon: "💎", label: "Accessories" },
+  { id: "looks", icon: "🪞", label: "Full Looks" },
 ];
 
-export const makeupItems: MakeupItem[] = [
+export const beautyItems: BeautyItem[] = [
   // Lips
-  { id: "lip-1", name: "Rose Red", category: "lips", color: "#E53E3E", icon: "💋", premium: false },
-  { id: "lip-2", name: "Hot Pink", category: "lips", color: "#FF8FAB", icon: "💋", premium: false },
-  { id: "lip-3", name: "Coral", category: "lips", color: "#FF7F50", icon: "💋", premium: false },
-  { id: "lip-4", name: "Berry", category: "lips", color: "#8B5CF6", icon: "💋", premium: true },
-  { id: "lip-5", name: "Nude", category: "lips", color: "#D4A68C", icon: "💋", premium: false },
-  { id: "lip-6", name: "Candy", category: "lips", color: "#FF69B4", icon: "💋", premium: true },
+  { id: "lip-1", name: "Velvet Lip Gloss", brand: "Glossy Co", category: "lips", color: "#C44569", image: "💋", premium: false },
+  { id: "lip-2", name: "Matte Lipstick", brand: "Lux Beauty", category: "lips", color: "#B33939", image: "💄", premium: false },
+  { id: "lip-3", name: "Lip Oil", brand: "Dewy", category: "lips", color: "#E8A0BF", image: "✨", premium: false },
+  { id: "lip-4", name: "Berry Stain", brand: "Fresh Face", category: "lips", color: "#6C3483", image: "🫐", premium: true },
+  { id: "lip-5", name: "Nude Liner", brand: "Contour Co", category: "lips", color: "#C4A882", image: "✏️", premium: false },
+  { id: "lip-6", name: "Glazed Donut Gloss", brand: "Glow Lab", category: "lips", color: "#F0C8A8", image: "🍩", premium: true },
 
   // Eyes
-  { id: "eye-1", name: "Sparkle", category: "eyes", color: "#C4B5FD", icon: "✨", premium: false },
-  { id: "eye-2", name: "Rainbow", category: "eyes", color: "#EF4444", icon: "🌈", premium: false },
-  { id: "eye-3", name: "Smoky", category: "eyes", color: "#4B5563", icon: "💫", premium: true },
-  { id: "eye-4", name: "Ocean", category: "eyes", color: "#3B82F6", icon: "🌊", premium: false },
-  { id: "eye-5", name: "Gold", category: "eyes", color: "#F59E0B", icon: "⭐", premium: true },
-  { id: "eye-6", name: "Mint", category: "eyes", color: "#6EE7B7", icon: "💚", premium: false },
+  { id: "eye-1", name: "Shimmer Shadow", brand: "Sparkle", category: "eyes", color: "#C9B1FF", image: "✨", premium: false },
+  { id: "eye-2", name: "Cat Eye Liner", brand: "Bold Line", category: "eyes", color: "#2C3E50", image: "🖊️", premium: false },
+  { id: "eye-3", name: "Lash Serum", brand: "Lash Lab", category: "eyes", color: "#1A1A2E", image: "👁️", premium: true },
+  { id: "eye-4", name: "Bronze Palette", brand: "Sunkissed", category: "eyes", color: "#CD853F", image: "🎨", premium: false },
+  { id: "eye-5", name: "Gel Liner", brand: "Precision", category: "eyes", color: "#34495E", image: "✏️", premium: false },
+  { id: "eye-6", name: "Glitter Pigment", brand: "Party Glow", category: "eyes", color: "#DAA520", image: "💫", premium: true },
+
+  // Face
+  { id: "face-1", name: "Dewy Foundation", brand: "Skin First", category: "face", color: "#DBBFA0", image: "💧", premium: false },
+  { id: "face-2", name: "Concealer Pen", brand: "Cover Up", category: "face", color: "#E8CCAB", image: "✏️", premium: false },
+  { id: "face-3", name: "Setting Spray", brand: "Lock It", category: "face", color: "#87CEEB", image: "💨", premium: false },
+  { id: "face-4", name: "Contour Stick", brand: "Sculpt", category: "face", color: "#A0785A", image: "🖌️", premium: true },
+  { id: "face-5", name: "Highlighter", brand: "Glow Getter", category: "face", color: "#FFD700", image: "⭐", premium: false },
+  { id: "face-6", name: "Primer", brand: "Base Camp", category: "face", color: "#FFF0DB", image: "🧴", premium: false },
+
+  // Skincare
+  { id: "skin-1", name: "Gentle Cleanser", brand: "Pure Skin", category: "skincare", color: "#B2DFDB", image: "🧼", premium: false },
+  { id: "skin-2", name: "Vitamin C Serum", brand: "Glow Lab", category: "skincare", color: "#FFB74D", image: "🍊", premium: false },
+  { id: "skin-3", name: "Moisturizer SPF", brand: "Shield", category: "skincare", color: "#E3F2FD", image: "☀️", premium: false },
+  { id: "skin-4", name: "Niacinamide", brand: "Clear Skin", category: "skincare", color: "#E8F5E9", image: "💧", premium: true },
+  { id: "skin-5", name: "Clay Mask", brand: "Deep Clean", category: "skincare", color: "#8D6E63", image: "🪨", premium: false },
+  { id: "skin-6", name: "Hyaluronic Acid", brand: "Hydra Boost", category: "skincare", color: "#BBDEFB", image: "💎", premium: true },
 
   // Blush
-  { id: "blush-1", name: "Pink", category: "blush", color: "#FFB3C6", icon: "🌸", premium: false },
-  { id: "blush-2", name: "Peach", category: "blush", color: "#FBBF24", icon: "🍑", premium: false },
-  { id: "blush-3", name: "Rose", category: "blush", color: "#FB7185", icon: "🌹", premium: false },
-  { id: "blush-4", name: "Coral", category: "blush", color: "#FF8C69", icon: "🧡", premium: true },
+  { id: "blush-1", name: "Cream Blush", brand: "Flush", category: "blush", color: "#F48FB1", image: "🌸", premium: false },
+  { id: "blush-2", name: "Liquid Blush", brand: "Drop Glow", category: "blush", color: "#EF9A9A", image: "💧", premium: false },
+  { id: "blush-3", name: "Bronzer", brand: "Sunkissed", category: "blush", color: "#D4A76A", image: "☀️", premium: false },
+  { id: "blush-4", name: "Peach Glow", brand: "Fruit Beauty", category: "blush", color: "#FFCC80", image: "🍑", premium: true },
+
+  // Brows
+  { id: "brow-1", name: "Brow Gel", brand: "Arch", category: "brows", color: "#5D4037", image: "✏️", premium: false },
+  { id: "brow-2", name: "Brow Pencil", brand: "Define", category: "brows", color: "#4E342E", image: "🖊️", premium: false },
+  { id: "brow-3", name: "Brow Lamination", brand: "Sleek Brow", category: "brows", color: "#795548", image: "✨", premium: true },
 
   // Accessories
-  { id: "acc-1", name: "Tiara", category: "accessories", color: "#FDE68A", icon: "👑", premium: false },
-  { id: "acc-2", name: "Sunglasses", category: "accessories", color: "#1F2937", icon: "🕶️", premium: false },
-  { id: "acc-3", name: "Bow", category: "accessories", color: "#FF8FAB", icon: "🎀", premium: false },
-  { id: "acc-4", name: "Bunny Ears", category: "accessories", color: "#FDF2F8", icon: "🐰", premium: true },
-  { id: "acc-5", name: "Cat Ears", category: "accessories", color: "#6B7280", icon: "🐱", premium: false },
-  { id: "acc-6", name: "Flowers", category: "accessories", color: "#34D399", icon: "🌺", premium: true },
-
-  // Face Paint
-  { id: "fp-1", name: "Butterfly", category: "facepaint", color: "#818CF8", icon: "🦋", premium: false },
-  { id: "fp-2", name: "Tiger", category: "facepaint", color: "#F97316", icon: "🐯", premium: false },
-  { id: "fp-3", name: "Cat", category: "facepaint", color: "#6B7280", icon: "🐱", premium: false },
-  { id: "fp-4", name: "Superhero", category: "facepaint", color: "#EF4444", icon: "🦸", premium: true },
-
-  // Stickers
-  { id: "st-1", name: "Stars", category: "stickers", color: "#FDE68A", icon: "⭐", premium: false },
-  { id: "st-2", name: "Hearts", category: "stickers", color: "#FF8FAB", icon: "💖", premium: false },
-  { id: "st-3", name: "Sparkles", category: "stickers", color: "#C4B5FD", icon: "✨", premium: false },
-  { id: "st-4", name: "Butterflies", category: "stickers", color: "#818CF8", icon: "🦋", premium: true },
+  { id: "acc-1", name: "Hair Clips", brand: "Clip Co", category: "accessories", color: "#FFD700", image: "📎", premium: false },
+  { id: "acc-2", name: "Sunglasses", brand: "Shade", category: "accessories", color: "#2C2C2C", image: "🕶️", premium: false },
+  { id: "acc-3", name: "Headband", brand: "Band It", category: "accessories", color: "#F8BBD0", image: "🎀", premium: false },
+  { id: "acc-4", name: "Hoop Earrings", brand: "Luxe", category: "accessories", color: "#FFD700", image: "⭕", premium: true },
+  { id: "acc-5", name: "Claw Clip", brand: "Hold Up", category: "accessories", color: "#D7CCC8", image: "🦀", premium: false },
 ];
 
-export const themePacks = [
-  { id: "princess", name: "Princess", emoji: "🌸", color: "#FFB3C6", free: true },
-  { id: "superhero", name: "Superhero", emoji: "🦸", color: "#EF4444", free: false },
-  { id: "halloween", name: "Halloween", emoji: "🎃", color: "#F97316", free: false },
-  { id: "christmas", name: "Christmas", emoji: "🎄", color: "#22C55E", free: false },
-  { id: "mermaid", name: "Mermaid", emoji: "🌊", color: "#3B82F6", free: false },
-  { id: "butterfly", name: "Butterfly", emoji: "🦋", color: "#818CF8", free: false },
-  { id: "rainbow", name: "Rainbow", emoji: "🌈", color: "#EF4444", free: true },
-  { id: "fairy", name: "Fairy", emoji: "🧚", color: "#A78BFA", free: false },
-  { id: "animals", name: "Animals", emoji: "🐱", color: "#F59E0B", free: false },
-  { id: "popstar", name: "Pop Star", emoji: "⭐", color: "#EC4899", free: false },
+export const routinePacks = [
+  { id: "clean-girl", name: "Clean Girl", emoji: "✨", color: "#F5E6D3", free: true },
+  { id: "soft-glam", name: "Soft Glam", emoji: "🌸", color: "#F8BBD0", free: true },
+  { id: "glass-skin", name: "Glass Skin", emoji: "💎", color: "#E3F2FD", free: false },
+  { id: "sunset-glow", name: "Sunset Glow", emoji: "🌅", color: "#FFE0B2", free: false },
+  { id: "doe-eyes", name: "Doe Eyes", emoji: "🦌", color: "#D7CCC8", free: false },
+  { id: "berry-lip", name: "Berry Lip", emoji: "🫐", color: "#E1BEE7", free: false },
+  { id: "bronze-goddess", name: "Bronze Goddess", emoji: "☀️", color: "#FFD54F", free: false },
+  { id: "night-out", name: "Night Out", emoji: "🌙", color: "#263238", free: false },
+  { id: "natural-beauty", name: "Natural Beauty", emoji: "🌿", color: "#C8E6C9", free: false },
+  { id: "y2k-glam", name: "Y2K Glam", emoji: "💿", color: "#CE93D8", free: false },
 ];

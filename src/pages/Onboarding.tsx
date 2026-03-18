@@ -1,15 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { SquishButton } from "@/components/SparkleEffect";
-import onboarding1 from "@/assets/onboarding-1.png";
-import onboarding2 from "@/assets/onboarding-2.png";
-import onboarding3 from "@/assets/onboarding-3.png";
 
 const slides = [
-  { image: onboarding1, emoji: "💄", text: "Get Ready With Me!" },
-  { image: onboarding2, emoji: "🎬", text: "Record Your Look!" },
-  { image: onboarding3, emoji: "⭐", text: "Save & Share!" },
+  {
+    title: "Your Beauty Studio",
+    subtitle: "Try on real products with your camera in real time",
+    emoji: "💄",
+  },
+  {
+    title: "Record Your Routine",
+    subtitle: "Capture your GRWM and share your favorite looks",
+    emoji: "🎬",
+  },
+  {
+    title: "Save & Collect",
+    subtitle: "Build your beauty collection and discover new products",
+    emoji: "✨",
+  },
 ];
 
 const Onboarding = () => {
@@ -28,55 +36,53 @@ const Onboarding = () => {
     <div className="flex flex-col min-h-screen bg-background relative">
       <button
         onClick={() => navigate("/home")}
-        className="absolute top-12 right-6 z-10 text-muted-foreground font-kid text-lg"
+        className="absolute top-14 right-6 z-10 text-muted-foreground text-sm font-medium"
       >
         Skip
       </button>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-8 pt-20">
+      <div className="flex-1 flex flex-col items-center justify-center px-10 pt-20">
         <AnimatePresence mode="wait">
           <motion.div
             key={current}
-            initial={{ opacity: 0, x: 100 }}
+            initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="flex flex-col items-center"
+            exit={{ opacity: 0, x: -60 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-col items-center text-center"
           >
-            <div className="w-72 h-72 rounded-4xl overflow-hidden shadow-soft mb-10">
-              <img
-                src={slides[current].image}
-                alt={slides[current].text}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-32 h-32 rounded-3xl bg-muted flex items-center justify-center mb-12">
+              <span className="text-5xl">{slides[current].emoji}</span>
             </div>
-            <p className="text-5xl mb-4">{slides[current].emoji}</p>
-            <h2 className="text-3xl font-bold text-foreground font-kid text-center">
-              {slides[current].text}
+            <h2 className="text-3xl font-display font-semibold text-foreground mb-4">
+              {slides[current].title}
             </h2>
+            <p className="text-muted-foreground text-base leading-relaxed max-w-[280px]">
+              {slides[current].subtitle}
+            </p>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="flex flex-col items-center pb-16 gap-8">
-        <div className="flex gap-3">
+      <div className="flex flex-col items-center pb-14 gap-8 px-10">
+        <div className="flex gap-2">
           {slides.map((_, i) => (
             <motion.div
               key={i}
-              className={`h-3 rounded-full ${i === current ? "w-8 bg-primary" : "w-3 bg-muted"}`}
+              className={`h-1 rounded-full ${i === current ? "w-8 bg-foreground" : "w-2 bg-border"}`}
               layout
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           ))}
         </div>
 
-        <SquishButton
-          size="lg"
+        <motion.button
+          whileTap={{ scale: 0.97 }}
           onClick={next}
-          className="bg-primary text-primary-foreground px-12 py-5 text-xl font-bold font-kid"
+          className="w-full bg-foreground text-background py-4 rounded-2xl text-base font-medium"
         >
-          {current === slides.length - 1 ? "Let's Go! ✨" : "Next →"}
-        </SquishButton>
+          {current === slides.length - 1 ? "Get Started" : "Continue"}
+        </motion.button>
       </div>
     </div>
   );
