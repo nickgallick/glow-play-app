@@ -127,7 +127,7 @@ const LandingPage = () => {
             className="flex items-center gap-2"
           >
             <img src={logo} alt="GRWM Studio" className="w-9 h-9 object-contain" />
-            <span className="font-bold text-lg text-landing-text">GlowUp Kids</span>
+            <span className="font-bold text-lg text-landing-text">GRWM Studio</span>
           </motion.div>
 
           <div className="hidden md:flex items-center gap-8">
