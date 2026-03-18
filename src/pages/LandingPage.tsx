@@ -7,6 +7,7 @@ import {
   X, Menu
 } from "lucide-react";
 import { useState } from "react";
+import logo from "@/assets/logo-transparent.png";
 
 const trustBadges = [
   { icon: EyeOff, label: "No Ads" },
@@ -125,10 +126,8 @@ const LandingPage = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-landing-pink to-landing-lavender flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-lg text-landing-text">GlowUp Kids</span>
+            <img src={logo} alt="GRWM Studio" className="w-9 h-9 object-contain" />
+            <span className="font-bold text-lg text-landing-text">GRWM Studio</span>
           </motion.div>
 
           <div className="hidden md:flex items-center gap-8">
@@ -694,10 +693,8 @@ const LandingPage = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-landing-pink to-landing-lavender flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="font-bold text-landing-text">GlowUp Kids</span>
+                <img src={logo} alt="GRWM Studio" className="w-8 h-8 object-contain" />
+                <span className="font-bold text-landing-text">GRWM Studio</span>
               </div>
               <p className="text-xs text-landing-text/40">The safest beauty app for kids ages 2–8.</p>
             </div>
