@@ -126,9 +126,7 @@ const LandingPage = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-landing-pink to-landing-lavender flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <img src={logo} alt="GRWM Studio" className="w-9 h-9 object-contain" />
             <span className="font-bold text-lg text-landing-text">GlowUp Kids</span>
           </motion.div>
 
