@@ -132,7 +132,6 @@ const Camera = () => {
                 navigate("/review");
               }
             }}
-            onMouseDown={() => {}}
             className="relative"
           >
             <div className="w-20 h-20 rounded-full border-4 border-primary-foreground/80 flex items-center justify-center">
