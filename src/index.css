@@ -102,11 +102,11 @@
   }
 
   .gradient-hero {
-    background: linear-gradient(135deg, hsl(350, 60%, 56%), hsl(30, 50%, 50%));
+    background: linear-gradient(135deg, #d94f6b, #bf8040);
   }
 
   .gradient-subtle {
-    background: linear-gradient(180deg, hsl(350, 60%, 96%), hsl(30, 30%, 96%));
+    background: linear-gradient(180deg, #f2d4da, #f0e8de);
   }
 
   .gradient-landing {
@@ -137,6 +137,6 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 hsla(350, 60%, 56%, 0.4); }
-  50% { box-shadow: 0 0 0 12px hsla(350, 60%, 56%, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 79, 107, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(217, 79, 107, 0); }
 }
