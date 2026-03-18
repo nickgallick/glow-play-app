@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-export default {
+const config: Config = {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
@@ -71,6 +71,7 @@ export default {
           yellow: "hsl(var(--landing-yellow))",
           dark: "hsl(var(--landing-dark))",
         },
+      },
       borderRadius: {
         "3xl": "24px",
         "2xl": "16px",
@@ -101,4 +102,6 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+};
+
+export default config;
