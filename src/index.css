@@ -50,9 +50,20 @@
 
     --font-display: 'Playfair Display', Georgia, serif;
     --font-body: 'Outfit', system-ui, sans-serif;
+    --font-landing: 'Inter', system-ui, sans-serif;
 
     --shadow-soft: 0 2px 12px rgba(0,0,0,0.06);
     --shadow-elevated: 0 8px 30px rgba(0,0,0,0.08);
+
+    /* Landing page tokens */
+    --landing-bg: 29 100% 96%;
+    --landing-text: 217 33% 17%;
+    --landing-light: 210 20% 98%;
+    --landing-pink: 344 100% 78%;
+    --landing-lavender: 258 95% 79%;
+    --landing-mint: 160 63% 67%;
+    --landing-yellow: 48 96% 77%;
+    --landing-dark: 217 33% 17%;
   }
 }
 
