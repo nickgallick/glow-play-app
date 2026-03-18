@@ -61,7 +61,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-      },
+        landing: {
+          bg: "hsl(var(--landing-bg))",
+          text: "hsl(var(--landing-text))",
+          light: "hsl(var(--landing-light))",
+          pink: "hsl(var(--landing-pink))",
+          lavender: "hsl(var(--landing-lavender))",
+          mint: "hsl(var(--landing-mint))",
+          yellow: "hsl(var(--landing-yellow))",
+          dark: "hsl(var(--landing-dark))",
+        },
       borderRadius: {
         "3xl": "24px",
         "2xl": "16px",
