@@ -693,9 +693,7 @@ const LandingPage = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-landing-pink to-landing-lavender flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                </div>
+                <img src={logo} alt="GRWM Studio" className="w-8 h-8 object-contain" />
                 <span className="font-bold text-landing-text">GlowUp Kids</span>
               </div>
               <p className="text-xs text-landing-text/40">The safest beauty app for kids ages 2–8.</p>
