@@ -694,7 +694,7 @@ const LandingPage = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <img src={logo} alt="GRWM Studio" className="w-8 h-8 object-contain" />
-                <span className="font-bold text-landing-text">GlowUp Kids</span>
+                <span className="font-bold text-landing-text">GRWM Studio</span>
               </div>
               <p className="text-xs text-landing-text/40">The safest beauty app for kids ages 2–8.</p>
             </div>
