@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, Undo2, Trash2, Loader2, Check } from "lucide-react";
+import { X, RotateCcw, Undo2, Trash2, Loader2, Check, Camera as CameraIcon } from "lucide-react";
 import { categories, beautyItems } from "@/data/makeupItems";
 import { useCamera } from "@/hooks/useCamera";
 import { useFaceLandmarks } from "@/hooks/useFaceLandmarks";
 import { useVideoRecorder } from "@/hooks/useVideoRecorder";
 import { drawProductOnFace } from "@/lib/faceDrawing";
+import { toast } from "sonner";
 
 const Camera = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const Camera = () => {
   const [appliedItems, setAppliedItems] = useState<string[]>([]);
   const [trayOpen, setTrayOpen] = useState(false);
   const [intensity, setIntensity] = useState(70);
+  const [isDragging, setIsDragging] = useState(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   const filteredItems = beautyItems.filter((item) => item.category === selectedCategory);
 
@@ -38,6 +41,52 @@ const Camera = () => {
   const handleConfirmSelection = () => {
     setTrayOpen(false);
   };
+
+  // Photo capture during recording
+  const capturePhoto = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `glowup-photo-${Date.now()}.png`, { type: "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        navigator.share({ files: [file], title: "GlowUp Photo" });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      toast("📸 Photo captured!");
+    }, "image/png");
+  }, []);
+
+  // Slider drag handling
+  const handleSliderInteraction = useCallback((clientY: number) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const rect = slider.getBoundingClientRect();
+    const relativeY = clientY - rect.top;
+    const percentage = Math.round(Math.max(10, Math.min(100, 100 - (relativeY / rect.height) * 100)));
+    setIntensity(percentage);
+  }, []);
+
+  const handleSliderPointerDown = useCallback((e: React.PointerEvent) => {
+    setIsDragging(true);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    handleSliderInteraction(e.clientY);
+  }, [handleSliderInteraction]);
+
+  const handleSliderPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDragging) return;
+    handleSliderInteraction(e.clientY);
+  }, [isDragging, handleSliderInteraction]);
+
+  const handleSliderPointerUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
   // Main render loop
   const renderLoop = useCallback(() => {
@@ -105,7 +154,6 @@ const Camera = () => {
     } else {
       const canvas = canvasRef.current;
       if (canvas) {
-        // Pass audio stream from camera for sound recording
         const audioStream = stream && stream.getAudioTracks().length > 0 ? stream : undefined;
         startRecording(canvas, audioStream || undefined);
       }
@@ -184,30 +232,62 @@ const Camera = () => {
         </div>
       )}
 
-      {/* Intensity slider */}
+      {/* Dynamic intensity slider */}
       <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-        <div className="relative w-8 h-36 glass-dark rounded-full overflow-hidden">
-          <div
-            className="absolute bottom-0 w-full bg-primary/50 rounded-full transition-all"
-            style={{ height: `${intensity}%` }}
+        <div
+          ref={sliderRef}
+          className="relative w-10 h-44 glass-dark rounded-full overflow-hidden cursor-pointer touch-none select-none"
+          onPointerDown={handleSliderPointerDown}
+          onPointerMove={handleSliderPointerMove}
+          onPointerUp={handleSliderPointerUp}
+          onPointerCancel={handleSliderPointerUp}
+        >
+          {/* Fill */}
+          <motion.div
+            className="absolute bottom-0 w-full bg-primary/60 rounded-full"
+            animate={{ height: `${intensity}%` }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
-          <input
-            type="range"
-            min={10}
-            max={100}
-            value={intensity}
-            onChange={(e) => setIntensity(Number(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            style={{ writingMode: "vertical-lr", direction: "rtl" }}
+          {/* Thumb indicator */}
+          <motion.div
+            className="absolute left-1/2 -translate-x-1/2 w-8 h-1.5 bg-primary-foreground rounded-full shadow-lg"
+            animate={{ bottom: `calc(${intensity}% - 3px)` }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
+          {/* Percentage label */}
+          <motion.div
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+            animate={{ bottom: `calc(${intensity}% + 8px)` }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            <span className="text-primary-foreground text-[11px] font-bold drop-shadow-md">
+              {intensity}%
+            </span>
+          </motion.div>
         </div>
-        <p className="text-primary-foreground/50 text-[10px] text-center mt-1">{intensity}%</p>
+        <p className="text-primary-foreground/40 text-[9px] text-center mt-1.5 font-medium">
+          Intensity
+        </p>
       </div>
 
       {/* Bottom area */}
       <div className="relative z-10 mt-auto">
-        {/* Record button */}
-        <div className="flex justify-center mb-4">
+        {/* Record + photo buttons */}
+        <div className="flex justify-center items-center gap-6 mb-4">
+          {/* Photo capture button (visible while recording) */}
+          {recording && (
+            <motion.button
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={capturePhoto}
+              className="glass-dark w-12 h-12 rounded-full flex items-center justify-center"
+            >
+              <CameraIcon className="w-5 h-5 text-primary-foreground" strokeWidth={2} />
+            </motion.button>
+          )}
+
+          {/* Record button */}
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleRecord}
@@ -232,6 +312,9 @@ const Camera = () => {
               </p>
             )}
           </motion.button>
+
+          {/* Spacer for symmetry when recording */}
+          {recording && <div className="w-12" />}
         </div>
 
         {/* Category toolbar */}
@@ -298,7 +381,7 @@ const Camera = () => {
                     >
                       <span className="text-2xl">{item.image}</span>
                       {appliedItems.includes(item.id) && (
-                        <motion.div 
+                        <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center"
